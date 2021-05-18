@@ -69,7 +69,8 @@ type PullRequest struct {
 
 	BaseRef struct {
 		BranchProtectionRule struct {
-			RequiresStrictStatusChecks bool
+			RequiresStrictStatusChecks   bool
+			RequiredApprovingReviewCount int
 		}
 	}
 
@@ -373,8 +374,8 @@ func PullRequestStatus(client *Client, repo ghrepo.Interface, options StatusOpti
 	queryPrefix := `
 	query PullRequestStatus($owner: String!, $repo: String!, $headRefName: String!, $viewerQuery: String!, $reviewerQuery: String!, $per_page: Int = 10) {
 		repository(owner: $owner, name: $repo) {
-			defaultBranchRef { 
-				name 
+			defaultBranchRef {
+				name
 			}
 			pullRequests(headRefName: $headRefName, first: $per_page, orderBy: { field: CREATED_AT, direction: DESC }) {
 				totalCount
@@ -390,11 +391,16 @@ func PullRequestStatus(client *Client, repo ghrepo.Interface, options StatusOpti
 		queryPrefix = `
 		query PullRequestStatus($owner: String!, $repo: String!, $number: Int!, $viewerQuery: String!, $reviewerQuery: String!, $per_page: Int = 10) {
 			repository(owner: $owner, name: $repo) {
-				defaultBranchRef { 
-					name 
+				defaultBranchRef {
+					name
 				}
 				pullRequest(number: $number) {
 					...prWithReviews
+					baseRef {
+						branchProtectionRule {
+							requiredApprovingReviewCount
+						}
+					}
 				}
 			}
 		`
