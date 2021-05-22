@@ -1,19 +1,14 @@
 package cmdutil
 
 import (
-	"os"
 	"testing"
 
 	"github.com/cli/cli/internal/config"
+	"github.com/cli/cli/pkg/env"
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_CheckAuth(t *testing.T) {
-	orig_GITHUB_TOKEN := os.Getenv("GITHUB_TOKEN")
-	t.Cleanup(func() {
-		os.Setenv("GITHUB_TOKEN", orig_GITHUB_TOKEN)
-	})
-
 	tests := []struct {
 		name     string
 		cfg      func(config.Config)
@@ -51,11 +46,16 @@ func Test_CheckAuth(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			tokenValue := ""
 			if tt.envToken {
-				os.Setenv("GITHUB_TOKEN", "TOKEN")
-			} else {
-				os.Setenv("GITHUB_TOKEN", "")
+				tokenValue = "TOKEN"
 			}
+			t.Cleanup(env.WithEnv(map[string]string{
+				"GH_TOKEN":                tokenValue,
+				"GITHUB_TOKEN":            "",
+				"GH_ENTERPRISE_TOKEN":     "",
+				"GITHUB_ENTERPRISE_TOKEN": "",
+			}))
 
 			cfg := config.NewBlankConfig()
 			tt.cfg(cfg)
