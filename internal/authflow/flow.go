@@ -105,7 +105,7 @@ func authFlow(oauthHost string, IO *iostreams.IOStreams, notice string, addition
 					fmt.Fprint(w, "  Please try entering the URL in your browser manually\n")
 				}
 			} else {
-				fmt.Fprintf(w, "- Open this URL in your browser: %s", cs.Bold(oauthHost))
+				fmt.Fprintf(w, "- Open this URL in your browser: %s", cs.Bold(url))
 			}
 			return nil
 		},
