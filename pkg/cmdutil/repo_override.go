@@ -2,6 +2,8 @@ package cmdutil
 
 import (
 	"os"
+	"sort"
+	"strings"
 
 	"github.com/cli/cli/internal/ghrepo"
 	"github.com/spf13/cobra"
@@ -19,6 +21,18 @@ func executeParentHooks(cmd *cobra.Command, args []string) error {
 
 func EnableRepoOverride(cmd *cobra.Command, f *Factory) {
 	cmd.PersistentFlags().StringP("repo", "R", "", "Select another repository using the `[HOST/]OWNER/REPO` format")
+	_ = cmd.RegisterFlagCompletionFunc("repo", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		var results []string
+		remotes, _ := f.Remotes()
+		for _, remote := range remotes.FilterByHosts([]string{"github.com"}) {
+			repo := remote.RepoOwner() + "/" + remote.RepoName()
+			if strings.HasPrefix(repo, toComplete) {
+				results = append(results, repo)
+			}
+		}
+		sort.Strings(results)
+		return results, cobra.ShellCompDirectiveNoSpace
+	})
 
 	cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		if err := executeParentHooks(cmd, args); err != nil {
