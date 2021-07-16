@@ -59,6 +59,24 @@ func TestNewCmdBrowse(t *testing.T) {
 			wantsErr: false,
 		},
 		{
+			name: "Commit flag",
+			cli:  "--commit e32e640",
+			wants: BrowseOptions{
+				Commit: "e32e640",
+			},
+			wantsErr: false,
+		},
+		{
+			name:     "Commit flag no arg",
+			cli:      "-c",
+			wantsErr: true,
+		},
+		{
+			name:     "Multi flags",
+			cli:      "-c 1a2b3c -b trunk",
+			wantsErr: true,
+		},
+		{
 			name: "branch flag",
 			cli:  "--branch main",
 			wants: BrowseOptions{
@@ -253,6 +271,25 @@ func Test_runBrowse(t *testing.T) {
 			baseRepo:    ghrepo.New("mislav", "will_paginate"),
 			wantsErr:    false,
 			expectedURL: "https://github.com/mislav/will_paginate/tree/3-0-stable/init.rb#L6",
+		},
+		{
+			name: "opening browser with Commit hash no args",
+			opts: BrowseOptions{
+				Commit: "162a1b2",
+			},
+			baseRepo:    ghrepo.New("torvalds", "linux"),
+			wantsErr:    false,
+			expectedURL: "https://github.com/torvalds/linux/tree/162a1b2/",
+		},
+		{
+			name: "opening browser with commit hash file arg",
+			opts: BrowseOptions{
+				Commit:      "162a1b2",
+				SelectorArg: "api/cache.go:32",
+			},
+			baseRepo:    ghrepo.New("cli", "cli"),
+			wantsErr:    false,
+			expectedURL: "https://github.com/cli/cli/tree/162a1b2/api/cache.go#L32",
 		},
 	}
 
