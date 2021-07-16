@@ -6,8 +6,9 @@ import (
 )
 
 type Extension struct {
-	path string
-	url  string
+	path      string
+	url       string
+	updatable bool
 }
 
 func (e *Extension) Name() string {
@@ -20,4 +21,8 @@ func (e *Extension) Path() string {
 
 func (e *Extension) URL() string {
 	return e.url
+}
+
+func (e *Extension) Updatable() bool {
+	return e.updatable
 }

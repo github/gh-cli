@@ -1,7 +1,6 @@
 package extensions
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -99,17 +98,39 @@ func (m *Manager) list(includeMetadata bool) []extensions.Extension {
 			continue
 		}
 		var remoteURL string
+		var updatable bool
 		if gitExe != "" {
-			stdout := bytes.Buffer{}
-			cmd := m.newCommand(gitExe, "--git-dir="+filepath.Join(dir, f.Name(), ".git"), "config", "remote.origin.url")
-			cmd.Stdout = &stdout
-			if err := cmd.Run(); err == nil {
-				remoteURL = strings.TrimSpace(stdout.String())
-			}
+			func() {
+				gitDir := "--git-dir=" + filepath.Join(dir, f.Name(), ".git")
+
+				cmd := m.newCommand(gitExe, gitDir, "config", "remote.origin.url")
+				url, err := cmd.Output()
+				if err != nil {
+					return
+				}
+				remoteURL = strings.TrimSpace(string(url))
+
+				cmd = m.newCommand(gitExe, gitDir, "rev-parse", "origin")
+				remoteSha, err := cmd.Output()
+				if err != nil {
+					return
+				}
+
+				cmd = m.newCommand(gitExe, gitDir, "rev-parse", "HEAD")
+				localSha, err := cmd.Output()
+				if err != nil {
+					return
+				}
+
+				if string(remoteSha) != string(localSha) {
+					updatable = true
+				}
+			}()
 		}
 		results = append(results, &Extension{
-			path: filepath.Join(dir, f.Name(), f.Name()),
-			url:  remoteURL,
+			path:      filepath.Join(dir, f.Name(), f.Name()),
+			url:       remoteURL,
+			updatable: updatable,
 		})
 	}
 	return results
